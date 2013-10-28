@@ -1,0 +1,61 @@
+---
+layout: post
+title: Getting the most out of your Android phone
+categories:
+- Random
+tags:
+- Android
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+---
+ie running a custom firmware on it.
+
+Things you need
+<ol>
+	<li><a href="http://rapidshare.com/files/291689412/recovery-RA-magic-v1.2.3H.img">Recovery image</a></li>
+	<li><a href="http://fdsfiles.com/temp/rad-4.2-bfs-ebi1.zip"> </a><a href="http://www.androidspin.com/downloads.php?dir=enomther/ROM/&amp;file=HTC_ADP_1.6_DRC83_rooted_base.zip">HTC ADP 1.6 DRC83</a></li>
+	<li><a href="http://n0rp.chemlab.org/android/update-cm-4.2.1-signed.zip">CyanogenMod 4.2.1</a></li>
+	<li><a href="http://fdsfiles.com/temp/rad-4.2-bfs-ebi1.zip">Radix 4.2 kernel</a></li>
+	<li><a href="http://developer.android.com/sdk/1.6_r1/index.html">Android SDK</a></li>
+</ol>
+Note: all the files a for a HTC Magic PTV32A, if you got another model check the links in the bottom for the correct files.<strong> Also read the whole post before you start anything :)</strong>
+
+So, start with putting the ADP 1.6 zip along with the Cyanogen update zip and the kernel zip in the root on you sdcard. So now we're ready to start the install, begin by turning of your device and then start it while holding down the back key (ie hold down the back key, press the power button and keep the back key pressed until you reach a menu  that have 3 Android mascots surfing in the bottom)
+
+At this point unzip the Android sdk and go to the tools folder, from there do <em>fastboot boot &lt;path to your recovery image&gt;</em>, this should give you a green menu. If your running Linux or Mac OSX you need to Google and download the fastboot binary since it's not included in the sdk for those platforms.
+
+From the menu do the following things in this order:
+<ol>
+	<li>Wipe data/factory reset</li>
+	<li>Wipe data/factory reset</li>
+	<li>Apply zip: HTC_ADP_1.6_DRC83_rooted_base.zip</li>
+	<li>Apply zip: update-cm-4.2.1-signed.zip</li>
+	<li>Apply zip: rad-4.?.zip</li>
+	<li>Reboot</li>
+</ol>
+The first reboot takes a couple of minutes. Since we've done a factory reset you have to reenter your Google account and download all of your applications.
+
+So whats the point of installing a custom firmware then? First of you get the latest things from google, some community tweaks and the ability to install apps that require a bit control of your phone. Examples are:
+<ul>
+	<li><a href="http://code.google.com/p/market-enabler/">market-enabler</a>, a nice app that makes it possible to fake what carrier your phone is connected to so that you can buy apps from marked. This does not allow you to pirate applications just buy them, very handy for people in say Sweden where we don't have market access yet.</li>
+	<li><a href="http://code.google.com/p/android-wifi-tether/">android-wifi-tether</a> once installed this app allows you to turn your phone into a wifi access point so that you can connect your pc etc to it and use it's Internet connection.</li>
+</ul>
+There's a bunch of other applications out there too but these 2 i found particularly useful. <strong>
+</strong>
+
+Ref:
+
+<a href="http://forum.xda-developers.com/showthread.php?t=567610">CyanogenMod</a>
+
+<a href="http://forum.xda-developers.com/showthread.php?t=568032">Radix Kernels + extra install instructions</a>
+
+<a href="http://forum.xda-developers.com/showthread.php?t=530492">Recovery Images</a>
+<div id="_mcePaste" style="overflow: hidden; position: absolute; left: -10000px; top: 0px; width: 1px; height: 1px;">def get_private_customer_blixten()
+party_service = Configuration.instance.service_url :party_service
+xml = RestClient.get "#{party_service}/private_customers.xml?query=blixten@test.se"
+doc = REXML::Document.new(xml)
+return doc
+end</div>

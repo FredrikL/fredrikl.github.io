@@ -1,0 +1,63 @@
+---
+layout: post
+title: Sinatra on Heroku
+categories:
+- Code
+tags:
+- heroku
+- Ruby
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '2'
+  _flattr_post_hidden: '0'
+  _flattr_post_customurl: ''
+---
+Steps to get a <a href="http://www.sinatrarb.com/">sinatra</a>/<a href="http://datamapper.org/">datamapper</a> site running on <a href="http://www.heroku.com">heroku</a>.  First do git init in a directory then you need 3 files:
+
+A Gemfile with the gems used, make sure to group them since sqlite isn't available on heroku.
+<pre class="brush: ruby">source :rubygems
+gem 'sinatra'
+gem 'thin'
+gem 'haml'
+gem 'datamapper'
+gem 'dm-postgres-adapter', :group =&gt; :production
+gem 'dm-sqlite-adapter', :group =&gt; :development</pre>
+A Procfile, simply tells heroku which file to start with, note the -e production to put the site in production mode (in case you load different dependencies depending on environment)
+<pre class="brush: shell">web: bundle exec ruby demo.rb -p $PORT -e production</pre>
+And a simple Sinatra site
+<pre class="brush: ruby">require 'sinatra'
+require 'haml'
+require 'datamapper'
+
+class Item
+  include DataMapper::Resource
+
+  property :text, String,:key =&gt; true
+end
+
+configure do
+  DataMapper.setup(:default, ENV['DATABASE_URL'] ||
+                             "sqlite3://#{Dir.pwd}/demo.db")
+  DataMapper.finalize
+  DataMapper.auto_migrate!
+
+  Item.create(:text =&gt; "hi")
+end
+
+get '/' do
+  @demo = Item.all
+
+  haml :view
+end</pre>
+Install <a href="https://toolbelt.heroku.com/">heroku toolbelt</a>, then do the following:
+<pre class="brush: shell">heroku login
+heroku create
+heroku addons:add heroku-postgresql:dev
+heroku pg:promote HEROKU_POSTGRESQL_BROWN</pre>
+The last command sets the DATABASE_URL environment variable to point to the added postgres instance, the name depends on the added instance type use heroku config to get the correct one. Once all these things are done you can push the site to heroku.
+<pre class="brush: shell">git push heroku origin</pre>
+For local testing start the site with this command
+<pre class="brush: shell">bundle exec ruby demo.rb</pre>
+I've put a demo repo for the sinatra site in a github repo <a href="https://github.com/FredrikL/SinatraOnHeroku">here</a>

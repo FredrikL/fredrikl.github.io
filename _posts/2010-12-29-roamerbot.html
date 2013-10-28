@@ -1,0 +1,28 @@
+---
+layout: post
+title: Roamerbot
+categories:
+- Code
+- Hacks
+tags:
+- Arduino
+- Robot
+status: publish
+type: post
+published: true
+meta:
+  _flattr_btn_disabled: ''
+  _flattr_post_hidden: '0'
+  _flattr_post_category: text
+  _flattr_post_language: en_GB
+  _edit_last: '2'
+  _wp_old_slug: ''
+---
+<a href="http://blog.tacticalnuclearstrike.com/wp-content/2010/12/IMG_8905.jpg"><img class="size-medium wp-image-985 alignleft" title="Hai" src="http://blog.tacticalnuclearstrike.com/wp-content/2010/12/IMG_8905-200x300.jpg" alt="" width="200" height="300" /> </a>I've been working on a Robot for a while and it's finally in a state that I can call working. Roamerbot seemed like a good name for it since it roams my house trying not to run into things. A previous <a href="http://blog.tacticalnuclearstrike.com/2010/10/total-world-domination-or-my-arduino-robot/">post</a> covers the parts used, if I find a good tool I'll try to create a nice schematic.
+
+Until then the setup is as following: 4 dc motors connected to the motor shield, 1 server connected to servo 1 on the shield and a Ping))) sensor connected to pin 2. To power the bot I use 2 sources, a 9v battery to power the Arduino board and Ping sensor and 5x1.5 AAA batteries to power the motors and servo. To hold everything in place i decided to use zip ties, not the most aesthetic solution but it works.
+
+<a href="http://blog.tacticalnuclearstrike.com/wp-content/2010/12/IMG_8908.jpg"><img class="alignright size-medium wp-image-986" title="Details" src="http://blog.tacticalnuclearstrike.com/wp-content/2010/12/IMG_8908-300x200.jpg" alt="" width="300" height="200" /></a>The <a href="http://www.arduino.cc/en/Tutorial/Sketch">sketch</a> used to run the bot is hosted on <a href="https://github.com/FredrikL/Roamerbot">github</a>. Most parts are quite simple, the only hack I had to add was that each time I measure range I do it 3 times and return the average. The reason for this is that in some cases (once every 20 or so times) I got a reading that was of, usually way to low, which caused the bot to start to get surrounding readings and then turn. Left to solve is to handle when the Bot runs into items that sits below the sensor so that they're not detected and the wheels just spins, might be a slightly harder problem to solve. Other fun things to add would be some kind of mapping to make it possible to build a 2d mapping of the room the bot is in.
+
+Roamerbot in action, had to chase it since it was running way for me.
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="480" height="385" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,40,0"><param name="allowFullScreen" value="true" /><param name="allowscriptaccess" value="always" /><param name="src" value="http://www.youtube.com/v/a-ehzJ_C0VA?fs=1&amp;hl=sv_SE" /><param name="allowfullscreen" value="true" /><embed type="application/x-shockwave-flash" width="480" height="385" src="http://www.youtube.com/v/a-ehzJ_C0VA?fs=1&amp;hl=sv_SE" allowscriptaccess="always" allowfullscreen="true"></embed></object>

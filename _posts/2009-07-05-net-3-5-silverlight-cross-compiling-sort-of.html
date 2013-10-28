@@ -1,0 +1,42 @@
+---
+layout: post
+title: .Net 3.5 / Silverlight cross compiling (sort of)
+categories:
+- Code
+tags:
+- C#
+- MSBuild
+- Silverlight
+- WCF
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+---
+I'm working on a Silverlight/WCF project where I wanted to share my DataContract classes between the WCF service and the Silverlight client, so that changing the contract would break the client, instead of giving errors at run time. The other way of doing this is using the add as link feature, but since I have a lot of different classes that seemed like a lot of work.
+
+A Silverlight project has the following target:
+<pre class="brush: xml">&lt;Import Project="$(MSBuildExtensionsPath)\Microsoft\
+   Silverlight\v2.0\Microsoft.Silverlight.CSharp.targets" /&gt;</pre>
+A .Net 3.5 CLR project has this target:
+<pre class="brush: xml">&lt;Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" /&gt;</pre>
+So what I want is to have both targets in the csproj file and when I build the project output 2 dll's one for Silverlight and one for my .Net 3.5 clr project.
+
+Since Visual Studio doesn't care about the condition attribute on a import node in the project file (it always takes the first node in the file) I needed some other way of choosing what configuration to build.
+
+The solution I found was to add a new configuration to the project called CLR, and then edit my csproj file and add some bits.
+<pre class="brush: xml">&lt;Import Project="$(MSBuildExtensionsPath)\Microsoft\
+   Silverlight\v2.0\Microsoft.Silverlight.CSharp.targets" Condition=" '$(Configuration)' != 'CLR' " /&gt;
+&lt;Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition=" '$(Configuration)' == 'CLR' " /&gt;</pre>
+Now I have both import nodes in the csproj file, since Visual Studio always uses the first target file (Silverlight in this case) this limits the intellisense to the Silverlight CLR, the second one is for building my 3.5 dll.
+
+So to make this work I had to add a AfterBuild task.
+<pre class="brush: xml">&lt;MSBuild Projects="$(MSBuildProjectFile)" Properties="Configuration=CLR;Platform=AnyCPU" Targets="Build" ContinueOnError="true" /&gt;</pre>
+This will simply build the project again but with the configuration param set to CLR, I also needed to modify the target and add a condition so that I don't get stuck in a build loop. The full target looks like this:
+<pre class="brush: xml">&lt;Target Name="AfterBuild" Condition=" '$(Configuration)' != 'CLR' "&gt;
+&lt;MSBuild Projects="$(MSBuildProjectFile)" Properties="Configuration=CLR;Platform=AnyCPU" Targets="Build" ContinueOnError="true" /&gt;
+&lt;/Target&gt;</pre>
+To be able to use this I simply added the class library as a project reference to other Silverlight project and a reference to the CLR dll for the .Net 3.5 projects. This way I get both ddl's on every build and all projects have  the same contract.
+
+Also if needed I can use the #if SILVERLIGH compiler switch to add code specific to either SilverLight or .Net 3.5.

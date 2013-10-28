@@ -1,0 +1,29 @@
+---
+layout: post
+title: dotLess, VirtualPathProvider & Embedded Resource
+categories:
+- Code
+tags:
+- .less
+- .net
+- configuration
+status: publish
+type: post
+published: true
+meta:
+  _flattr_post_customurl: ''
+  _edit_last: '2'
+  _flattr_post_hidden: '0'
+---
+In some cases it can be quite useful to share static content between different web applications. A way of achieving this is to include the files in a dll as <a href="http://msdn.microsoft.com/en-us/library/ht9h2dk8(v=vs.80).aspx">embedded resources</a> and serve them using a custom <a href="http://msdn.microsoft.com/en-us/library/system.web.hosting.virtualpathprovider.aspx">VirutalPathProvider</a>, for most things this will work without any additional work. However if you are using <a href="http://www.dotlesscss.org/">dotless</a> to make your css more maintanable you need to do reconfigure dotless to work with files served from a VirtualPathProvider.
+
+The 2 small changes you need to do in your web.config are, under system.webServer > handlers change the value resourceType attribue from <strong>File</strong> to <strong>Unspecified</strong>.
+<pre class="brush:xml">
+<add name="dotless" path="*.less" verb="GET" type="dotless.Core.LessCssHttpHandler,dotless.Core" resourceType="Unspecified" preCondition="" />
+</pre>
+And in the dotless configuration section add a source attribute with the value <strong>dotless.Core.Input.VirtualFileReader</strong>.
+<pre class="brush:xml">
+<dotless minifyCss="false" cache="true" web="false" source="dotless.Core.Input.VirtualFileReader" />
+</pre>
+
+Also make sure that there's no static added under system.webServer > handlers for the less extension.

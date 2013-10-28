@@ -1,0 +1,54 @@
+---
+layout: post
+title: Using the --guess argument in Cucumber
+categories:
+- Code
+tags:
+- BDD
+- Cucumber
+- Ruby
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '2'
+  _wp_old_slug: cucumber-using-the-guess-argument
+---
+When working with a lot of feature files in <a href="http://www.cukes.info">cucumber</a> you'll sooner or later run in to the problem of having 2 similar statements ie:
+<pre class="brush: ruby">Then /^epic .*$/ do
+end
+
+Then /^epic fail$/ do
+end</pre>
+If you just run cucumber &lt;feature file&gt; with this definition it will fail with the following error: <strong>Ambiguous match of "epic fail"</strong>. To solve this problem just add --guess on the command line (cucumber --guess &lt;feature file&gt;). What <a href="http://rubyforge.org/pipermail/rspec-devel/2009-January/005196.html">happens</a> is that the cucumber runner does a bit of evaluating to decide what method to call, so far it has worked as expected.
+
+Files needed to test:
+* fail.feature:
+<pre class="brush: plain">Feature: Fail
+	In order to test this
+	I want a feature file that contains a test
+
+	Scenario:
+	Given a dummy
+	When a win
+	Then epic win
+
+	Scenario:
+	Given a dummy
+	When an epic fail
+	Then epic fail</pre>
+* fail_step.rb
+<pre class="brush: ruby">Given /^a dummy$/ do
+end
+
+When /^a win$/ do
+end
+
+When /^an epic fail$/ do
+end
+
+Then /^epic .*$/ do
+end
+
+Then /^epic fail$/ do
+end</pre>

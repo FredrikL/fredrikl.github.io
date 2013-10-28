@@ -1,0 +1,86 @@
+---
+layout: post
+title: Starting with Ruby & Cucumber
+categories:
+- Code
+tags:
+- Cucumber
+- Ruby
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+---
+(Just a small post mostly for myself, in case i forget)
+
+I've been playing a bit with ruby the last couple of days, mostly because i migth get to use it at work later on and a saw i short demo by <a href="http://thomaslundstrom.blogspot.com/">Thomas Lundström</a> on cucumber at the latest <a href="http://oresund.altdotnet.org/">Alt.Net Öresund</a> meeting. However his demo was on IronRuby testing .Net code and it was too slow to be useful . So here's a short summary of how to implement the example on the cucmber<a href="http://cukes.info/"> homepage</a>.
+
+First the feature, just a plain text file defining the scenario we want to test:
+<pre class="brush: plain;">Feature: Addition
+  In order to aviod silly misstakes
+  As a math idiot
+  I want to be told the sum of two numbers
+
+  Scenario: Add two numbers
+    Given I have entered 50 into the calculator
+    And I have entered 70 into the calculator
+    When I press add
+    Then The result should be 120 on the screen</pre>
+Next is the parser, that parses the feature, so no magic here. Unless you think RegEx is magic.
+<pre class="brush: ruby;">require 'spec/expectations'
+
+Before do
+	@calculator = Calculator.new
+end
+
+Given /^I have entered (\d+) into the calculator$/ do |n|
+  @calculator.push(n.to_i)
+end
+
+When /^I press (\w+)$/ do |op|
+  @result = @calculator.op(op)
+end
+
+Then /^The result should be (\d+) on the screen$/ do |n|
+  @result.should == n.to_f
+end</pre>
+Then the Implementation, this once just has a couple of methods, but can be extened with more if needed.
+<pre class="brush: ruby;">class Calculator
+  def push(n)
+    @args ||= []
+    @args &lt;&lt; n
+  end
+
+  def op(type)
+	res = 0
+	case type
+		when "add"
+				@args.each do |input|
+				  res += input
+				end
+	end
+	res
+  end
+end</pre>
+So, to run it you need to have Cucubmer &amp; RSpec installed, fastest way to install them is to do:
+<pre class="brush: plain;">gem install cucumber
+gem install rspec</pre>
+When everything is installed just do
+<pre class="brush: plain;">cucumber addition.feature</pre>
+and your result should look something like this:
+<pre class="brush: plain;">Feature: Addition
+  In order to aviod silly misstakes
+  As a math idiot
+  I want to be told the sum of two numbers
+
+  Scenario: Add two numbers                     # addition.feature:6
+    Given I have entered 50 into the calculator # steps.rb:7
+    And I have entered 70 into the calculator   # steps.rb:7
+    When I press add                            # steps.rb:11
+    Then The result should be 120 on the screen # steps.rb:15
+
+1 scenario
+4 passed steps</pre>
+
+But all the lines starting with Given, And, When, Then should be in green if the test passed

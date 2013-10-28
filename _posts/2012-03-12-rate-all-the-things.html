@@ -1,0 +1,23 @@
+---
+layout: post
+title: Rate All The Things
+categories:
+- Code
+tags:
+- Android
+- Barcodes
+- C#
+status: publish
+type: post
+published: true
+meta:
+  _flattr_post_language: en_GB
+  _edit_last: '2'
+  _flattr_post_category: text
+  _flattr_post_hidden: '0'
+---
+Last month I worked on a small idea that I called rate all the things. The idea was to create a smart phone app that could be used to rate anything that has a bar code (or QR code). So that's what I built, mostly just for the fun of it and since I fail at UX that was all the feedback I got from my Show Hacker News <a href="http://news.ycombinator.com/item?id=3582192">post</a>. After a bit of thinking I decided to open source the site and Android app i built so that I can go on building something else (or just finish one of the billion other projects I toy with).
+
+<a href="https://github.com/FredrikL/RateAllTheThingsBackend">Back end:</a> built on asp.net using <a href="http://www.nancyfx.org">Nancy</a> (instead of asp.net mvc) to support simple routing and overall fun to work with instead of an headache. Entry point are the different modules mapping out routes. To handle authentication the simplest way was to use basic authentication combined with strong random passwords (users are not able to select their own passwords) and running everything over SSL. Since most of the traffic for the site is over Json I decided that the <a href="https://github.com/grumpydev/SuperSimpleViewEngine">SuperSimpleViewEngine</a> bundled with Nancy was more that enough for my needs, just as me using <a href="https://github.com/grumpydev/TinyIoC">TinyIoC</a> since it's bundled and I'm not doing anything that requires something more fancy.
+
+<a href="https://github.com/FredrikL/RateAllTheThingsAndroid">Android app</a>: To be able to scan bar codes I used the <a href="http://code.google.com/p/zxing/wiki/ScanningViaIntent">IntentIntegrator</a> class supplied by zxing, it handles talking to <a href="https://play.google.com/store/apps/details?id=com.google.zxing.client.android">Barcode Scanner</a> and if it's not installed can take the user to Google Play to install it. I used the <a href="http://developer.android.com/resources/samples/ActionBarCompat/index.html">ActionBarCompat</a> example to have an <a href="http://developer.android.com/guide/topics/ui/actionbar.html">Action Bar</a> in the app in all versions and not just on devices running Android 4. On the arcitecture side I used <a href="http://code.google.com/p/roboguice/">roboguice</a> for ioc handling and alot of <a href="http://developer.android.com/reference/android/os/AsyncTask.html">async tasks</a> to wrap all network calls.

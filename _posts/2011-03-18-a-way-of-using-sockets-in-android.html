@@ -1,0 +1,109 @@
+---
+layout: post
+title: A way of using sockets in Android
+categories:
+- Code
+tags:
+- Android
+- Java
+- Ruby
+- Socket
+- Thread
+status: publish
+type: post
+published: true
+meta:
+  _flattr_post_language: en_GB
+  _flattr_post_category: text
+  _flattr_post_hidden: '0'
+  _flattr_btn_disabled: ''
+  _edit_last: '2'
+---
+I've been working on a project involving sockets, threads and other fun stuff and thought it might be something worth writing about. First something that is good to know if you want to connect to your computer from your emulator the IP address to use is 10.0.2.2.
+
+First a quick refresh on the activity life cycle in android. The important part here is what happens at onPause <em>Other applications need memory</em> in my experience that doesn't happen on your emulator but when the end user loads it on his/her phone it's usually full of applications causing all kinds of problems if you assume that the application will remain active after it leaves focus.
+<p style="text-align: center;"><a href="http://developer.android.com/reference/android/app/Activity.html"><img class="aligncenter" title="android activity lifecycle" src="http://developer.android.com/images/activity_lifecycle.png" alt="" width="545" height="711" /></a></p>
+<p style="text-align: center;">&nbsp;</p>
+So in this activity I've implemented onResume and onPause (I've omitted onCreate in the sample), the way this sample works is that it connects to the server when the activity is activated and when it is put into background by launching another activity or returning to the launcher the socket is closed.
+
+In onResume I create a socket using the ip of my computer hosting the emulator and port 12345, then i get the input and output stream from the socket and use them to create a BufferedReader and a BufferedWriter. Next step is to create a Thread that will wait for the socket to receive data and when it does it calls the UI thread using the runOnUiThread method. This is done since only the thread creating the UI is allowed to interact with controls created there. The thread runs in a loop checking that the thread hasn't been interrupted (more on this soon), the check to see if the result from readLine is null is to handle when the server closes the connection.
+
+In onPause I first interrupt the thread, this will cause the while loop in the receive thread to end, then i close the input and output streams followed by the socket itself. By closing the input stream the receive thread gets a result from readline and since the thread has been interrupted the thread reaches it's end. The last little method is the one used from say a button to send a string to the server.
+<pre class="brush:java">public class MainActivity extends Activity {
+	private Socket sock;
+	private BufferedReader r;
+	private BufferedWriter out;
+	private Thread thrd;
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		try {
+			sock = new Socket("10.0.2.2", 12345);
+			r = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+			out = new BufferedWriter(new OutputStreamWriter(sock
+					.getOutputStream()));
+
+			thrd = new Thread(new Runnable() {
+				public void run() {
+					while (!Thread.interrupted()) {
+						try {
+							final String data = r.readLine();
+							if (data != null)
+								runOnUiThread(new Runnable() {
+									@Override
+									public void run() {
+										// do something in ui thread with the data var
+									}
+								});
+
+						} catch (IOException e) { }
+					}
+				}
+			});
+			thrd.start();
+		} catch (IOException ioe) { }
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		if (thrd != null)
+			thrd.interrupt();
+		try {
+			if (sock != null) {
+				sock.getOutputStream().close();
+				sock.getInputStream().close();
+				sock.close();
+			}
+		} catch (IOException e) {}
+		thrd = null;
+	}
+
+	private void sendText() {
+		String text = inputText.getText().toString();
+		try {
+			out.write(text + "\n");
+			out.flush();
+		} catch (IOException e) {}
+	}
+}</pre>
+Things to improve, since I connect in onResume that should be the place to put logic to load host name/port from some preferences and also checks to see if the phone has any network connection active (3g or wifi).
+
+And to have something to talk to during testing here's a simple ruby server that sends the current time to the client when it connects and then just echos whatever the client sends.
+<pre class="brush:ruby">require 'socket'
+serv = TCPServer.new(12345)
+while true do
+  begin
+    s = serv.accept
+    while true do
+      s.puts Time.now
+      foo = s.gets
+      break if foo == nil
+      puts foo
+      s.puts foo
+    end
+    s.close
+  rescue
+  end
+end</pre>

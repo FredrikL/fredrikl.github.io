@@ -1,0 +1,85 @@
+---
+layout: post
+title: Using CookieSyncManager
+categories:
+- Code
+tags:
+- Android
+- Cookies
+- tumblr
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '2'
+  tweetlyUpdater_bitlyUrl: http://bit.ly/aSde2M
+---
+<a href="http://tumblr.com">Tumblr</a> has a mobile version of the user dashboard, <a href="http://tumblr.com/iphone">http://tumblr.com/iphone</a>, it can easily be embedded in mobile apps to remove the need to build a custom dashboard. In the tumblr <a href="http://www.tumblr.com/docs/en/api">api documentation</a> they have a example in Objective-C:
+<pre class="brush:c">NSString *email           = @"example@email.com";
+NSString *password        = @"password";
+NSString *destination_url = @"/iphone";
+
+NSMutableURLRequest *request = [[NSMutableURLRequest alloc]
+    initWithURL:[NSURL URLWithString:@"http://www.tumblr.com/login"]
+];
+[request setHTTPMethod:@"POST"];
+NSString *request_body = [NSString
+    stringWithFormat:@"email=%@&amp;password=%@&amp;redirect_to=%@",
+    [email           stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding],
+    [password        stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding],
+    [destination_url stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]
+];
+[request setHTTPBody:[request_body dataUsingEncoding:NSUTF8StringEncoding]];
+/* Load the request here with an NDA-covered iPhone component
+   that can view the web.
+*/
+[request release];</pre>
+Since I build Android applications I had to port the basic function. What I had to do was to authenticate using a DefaultHttpClient and get the cookies the server returns for me to set, then use those cookies when I load a WebView with the dashboard URL. This was I can avoid the login page and just send the user to the dashboard.
+<pre class="brush:java">public List authenticateAndReturnCookies() {
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpPost httppost = new HttpPost("http://www.tumblr.com/login");
+
+		try {
+			List nameValuePairs = new ArrayList(2);
+			nameValuePairs.add(new BasicNameValuePair("email", getUserName()));
+			nameValuePairs
+					.add(new BasicNameValuePair("password", getPassword()));
+			httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+			httpclient.execute(httppost);
+
+			return httpclient.getCookieStore().getCookies();
+		} catch (ClientProtocolException e) {
+		} catch (IOException e) {
+		}
+
+		return null;
+	}</pre>
+To be able to sync cookies you need to create a instance of the CookieSyncManager, after that it's just to take the cookies that was returned from login and set them on the CookiesSyncManager instance. Once that is done the cookies can be used in a WebView. In my case since the cookies are set the iPhone dashboard works and I don't end up at the login page.
+<pre class="brush:java">public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		CookieSyncManager.createInstance(this);
+
+		webView = new WebView(this);
+		setContentView(webView);
+		setupCookies();
+		webView.loadUrl("http://www.tumblr.com/iphone");
+}
+
+private void setupCookies() {
+		TumblrApi api = new TumblrApi(this);
+		List cookies = api.authenticateAndReturnCookies();
+
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				String cookieString = cookie.getName() + "="
+						+ cookie.getValue() + "; domain=" + cookie.getDomain();
+				CookieManager.getInstance().setCookie(cookie.getDomain(),
+						cookieString);
+			}
+			CookieSyncManager.getInstance().sync();
+		}
+	}</pre>
+The only thing here, they really should have named the URL mobile and not iPhone :)
+
+The full implementation for this can be found in the <a href="http://github.com/FredrikL/android-ttTumblr">ttTumblr repository</a> on <a href="http://github.com">github</a>.

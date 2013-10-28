@@ -1,0 +1,19 @@
+---
+layout: post
+title: Android debugging
+categories:
+- Code
+tags:
+- Android
+- Debugging
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+---
+A quick debugging tip for Android development. If you got an application that crashes on startup and just leaves you with the force close dialog running the following command might help:
+<blockquote>adb logcat</blockquote>
+adb is located in the tools directory of the Android SDK. Running it with the logcat parameter will output all that the emulator (or attached device) is logging. So in the case of an application crashing on startup you'll find the exception and stacktrace in the log when your run the application.
+
+In my case i tried to use findViewById before onCreate had been called.

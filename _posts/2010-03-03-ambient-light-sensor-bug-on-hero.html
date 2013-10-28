@@ -1,0 +1,22 @@
+---
+layout: post
+title: Ambient light sensor bug on Hero
+categories:
+- Code
+tags:
+- Flashlight
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '2'
+---
+Some Android models come with a Ambient light sensor that adjusts the back light depending on the ambient light (duh :p) while a nice feature it does however it doesn't play well with the setBrightness function.
+
+Currently the only way to override this behaviour seems to be to check Disable auto back light under Sound &amp; Display in settings.
+
+Confirmed to work HTC Hero, once my Nexus One arrives I'll see if it has the same behaviour. Googling tells me that it might also work for Droid.
+
+<strong>Update 2010-03-08:</strong>
+
+Revived my Nexus One, it comes with automatic brightness disabled, however setBrightness still works as intended with automatic brightness enabled.

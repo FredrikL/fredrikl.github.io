@@ -1,0 +1,29 @@
+---
+layout: post
+title: Automated backups in windows with Robocopy
+categories:
+- Random
+- Tricks
+tags:
+- backup
+- tool
+- windows
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '2'
+  _wp_old_slug: ''
+---
+Short post :)
+
+I needed a simple way to backup my photos to an external drive and I couldn't find a simple &amp; free solution so I ended up using the Robocopy tool in windows. What you need to do to mirror a directory structure is:
+<pre class="brush:plain">robocopy d:\users\fredrik\desktop\kamera f:\backup\foto /MIR</pre>
+This will mirror everything in the directory d:\users\fredrik\desktop\kamera to f:\backup\foto. The second part of this is to automate it using the windows task scheduler. It can be found under Control Panel &gt; Administrative Tools &gt; Task Scheduler depends a bit on windows version and installed language pack.
+<ol>
+	<li>Choose to create a Basic Task, give it a name.</li>
+	<li>Choose how often is its to run (once a week is good for me).</li>
+	<li>In Action select Start a program, the path to robocopy is C:\Windows\System32\Robocopy.exe</li>
+	<li>Enter arguments for robocopy in the arguments text box</li>
+</ol>
+After this just hit finish and if you want give it a test run.

@@ -1,0 +1,90 @@
+---
+layout: post
+title: Starting rails & booting a Raspberry Pi to browser
+categories:
+- Hacks
+tags:
+- linux
+- Rails
+- raspberry pi
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '2'
+  _flattr_post_hidden: '0'
+  _flattr_post_customurl: ''
+---
+So I got a Raspberry Pi at home that I use as a dashboard, it shows me all family calendars, train status for my stop etc. To get it to work as good as possible I made the following tweaks to my installation.
+
+<strong>To keep the screen allways on &amp; auto start midori</strong>
+<pre class="brush:bash">$ sudo nano /etc/lightdm/lightdm.conf
+# add the following lines to the [SeatDefaults] section
+# don't sleep the screen
+xserver-command=X -s 0 dpms</pre>
+<pre class="brush:bash">$ sudo nano /etc/xdg/lxsession/LXDE/autostart
+# comment everything and add the following lines
+@xset s off
+@xset -dpms
+@xset s noblank
+@midori</pre>
+from <a href="http://www.niteoweb.com/blog/raspberry-pi-boot-to-browser">http://www.niteoweb.com/blog/raspberry-pi-boot-to-browser</a>
+
+<strong>Unclutter</strong>
+To hide the mouse pointer when it's not used install unclutter, sudo apt-get install unclutter
+
+<strong>Script to autostart rails on startup</strong>
+<pre class="brush:bash">#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          rails
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start a Rails instance
+# Description:       Do the simplest thing possible in keeping with
+#             upstart to spin up a single Rails instance.
+### END INIT INFO
+
+# Author: Sam Pointer &amp; Fredrik Leijon
+#
+# Do NOT "set -e"
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/home/pi/.rvm/bin
+USER="pi"
+PORT=3000
+RAILS_ROOT="/home/pi/path_to_app"
+COMMAND="rails s -d"
+DESCRIPTION="Rails instance"
+RVM_PROFILE="/home/pi/.rvm/environments/default"
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (&gt;= 3.0-6) to ensure that this file is present.
+. /lib/lsb/init-functions
+
+#
+# Function that starts the daemon/service
+#
+do_start()
+{
+    # Return
+    #   0 if daemon has been started
+    #   1 if daemon was already running
+    #   2 if daemon could not be started
+    su -c "source $RVM_PROFILE &amp;&amp; cd $RAILS_ROOT &amp;&amp; $COMMAND" $USER
+}
+
+case "$1" in
+  start)
+        [ "$VERBOSE" != no ] &amp;&amp; log_daemon_msg "Starting $DESCRIPTION"
+        do_start
+        case "$?" in
+                0|1) [ "$VERBOSE" != no ] &amp;&amp; log_end_msg 0 ;;
+                2) [ "$VERBOSE" != no ] &amp;&amp; log_end_msg 1 ;;
+        esac
+        ;;
+esac</pre>
+from <a href="http://blog.sam-pointer.com/2011/03/24/starting-a-rails-instance-automatically-on-boot-on-ubuntu-server.html">http://blog.sam-pointer.com/2011/03/24/starting-a-rails-instance-automatically-on-boot-on-ubuntu-server.html</a>, slightly modified to support rvm. Script is also available <a href="https://gist.github.com/FredrikL/5123062">here</a> as a gist.

@@ -1,0 +1,114 @@
+---
+layout: post
+title: Killmail parser in C#
+categories:
+- Code
+- EVE
+tags:
+- C#
+- EVE
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+---
+In EVE when a player is killed in PVP a killmail is created, the <a href="http://wiki.eveonline.com/wiki/Main_Page">EVElopedia</a> wiki has a nice page about <a href="http://wiki.eveonline.com/wiki/Killmail">killmails</a>.
+
+A killmail looks something like this:
+<pre class="brush: plain">2009.05.11 02:37
+
+Victim: Noob
+Corp: Random Corp
+Alliance: Random Alliance
+Faction: NONE
+Destroyed: Crow
+System: Amarr
+Security: 0.0
+Damage Taken: 595
+
+Involved parties:
+
+Name: Killer (laid the final blow)
+Security: 2.6
+Corp: NONE
+Alliance: NONE
+Faction: NONE
+Ship: Sabre
+Weapon: 200mm AutoCannon II
+Damage Done: 595
+
+Destroyed items:
+
+TE-2100 Standard Missile Bay
+TE-2100 Standard Missile Bay
+Bloodclaw Light Missile, Qty: 46
+Warp Scrambler II
+Overdrive Injector System II
+Overdrive Injector System II
+
+Dropped items:
+
+Bloodclaw Light Missile, Qty: 92
+TE-2100 Standard Missile Bay
+1MN MicroWarpdrive I
+Warp Disruptor II
+Beta Reactor Control: Capacitor Power Relay I
+Bloodclaw Light Missile, Qty: 150 (Cargo)</pre>
+So a bit of regular text, with a rather simple formatting. Now on to the fun part: parsing! Usually I use <a href="http://en.wikipedia.org/wiki/Regex">regex</a> to parse text, it's easy and fun however for this it seemed a bit overkill, since the format of the data i rather static, the only thing that might change is the amount of 'nodes' under Involved parties. To make the whole thing simpler, for my current purposes I don't have a need for the destroyed/dropped items only victim and involved players. So i decided to go with the simples solution: a <a href="http://msdn.microsoft.com/en-us/library/system.io.stringreader.aspx">StringReader</a>.
+
+So i started building a small class to handle the parsing for me, i even did it the TDD way, it's a rather simple flow. Load the text, read it line by line and create objects that can be returned as a Kill object containing the parsed killmail. So the only public method in my parser class looks like this:
+<pre class="brush: csharp;">        public Kill ParseKillMail(string killMail)
+        {
+            StringReader reader = new StringReader(killMail);
+            Kill kill = new Kill();
+
+            try
+            {
+                kill.IncidentTime = GetIncidentTime(reader);
+                MoveReader(reader, 1);
+                kill.Victim = GetVictim(reader);
+                MoveReader(reader, 3);
+                GetInvolvedPlayers(kill, reader, kill.Victim.SystemSeen);
+            }
+            catch (Exception)
+            {
+                kill.IsComplete = false;
+            }
+            return kill;
+        }</pre>
+The GetIncidentTime method looks almost the same as the previous post on <a href="http://blog.tacticalnuclearstrike.com/2009/05/twitter-date-parsing-in-c/">twitter date parsing</a>, MoveReader just moves the reader X lines, handy since we do that a lot.
+
+The GetVictim method reads the first large block of text and converts it into a player object
+<pre class="brush: csharp;">        private Player GetVictim(StringReader reader)
+        {
+            Player P= new Player();
+            List victim = ReadLines(reader, 8);
+            P.Name = victim[0].Replace("Victim: ", "");
+            P.Corporation = victim[1].Replace("Corp: ", "");
+            P.Alliance = victim[2].Replace("Alliance: ", "");
+            P.Faction = victim[3].Replace("Faction: ", "");
+            P.Ship = victim[4].Replace("Destroyed: ", "");
+            P.SystemSeen = victim[5].Replace("System: ", "");
+
+            return P;
+        }</pre>
+After this we move the reader 3 lines down to start reading the list of involved players, since there can be 1..n players in that list that code is wrapped in a loop
+<pre class="brush: csharp;">        private void GetInvolvedPlayers(Kill kill, StringReader reader, string seen)
+        {
+            kill.Involved.Add(GetInvolved(reader, seen));
+            MoveReader(reader,1);
+            while(HasMoreInvolved(reader))
+            {
+                kill.Involved.Add(GetInvolved(reader, seen));
+            }
+        }</pre>
+The HasMoreInvolved call simply does a peek to check the next character to see if we have more players involved (row starting with a 'N' for Name)
+<pre class="brush: csharp;">        private bool HasMoreInvolved(StringReader reader)
+        {
+            return ((char) reader.Peek() == 'N');
+        }</pre>
+GetInvolved looks almost the same as GetVictim just some slight changes to handle the data included. I've included the code + unit tests as a zip if anyone wants a peek at it.
+
+Code:
+<a href="http://blog.tacticalnuclearstrike.com/wp-content/2009/05/killmailparser.zip"> killmailparser</a>

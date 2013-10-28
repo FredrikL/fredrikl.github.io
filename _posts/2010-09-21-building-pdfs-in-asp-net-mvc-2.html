@@ -1,0 +1,65 @@
+---
+layout: post
+title: Building PDFs in Asp.Net MVC 2
+categories:
+- Code
+tags:
+- C#
+- iTextSharp
+- MVC2
+- PDF
+status: publish
+type: post
+published: true
+meta:
+  _flattr_post_hidden: '0'
+  _flattr_post_category: text
+  _flattr_btn_disabled: ''
+  _edit_last: '2'
+  _flattr_post_language: en_GB
+  _wp_old_slug: building-pdfs-with-in-asp-net-mvc-2
+---
+To build a PDF I use <a class="zem_slink" title="IText" rel="homepage" href="http://itextpdf.com/">iTextSharp</a>, it supports most things with a bit of tweaking, the code below creates a 1 page pdf with 3 fields: header, body and footer. Some versions (not 5.0 I think) has support for headers and footers however only with a limited number of rows in each field. This way it's possible to have a larger header and/or footer. I set the MinimumHeight on the body cell, that way my footer will be in the bottom of the page. The exact size use depends on the size of the content in the other fields.
+
+Also the method below uses a MemoryStream to output the PDF that way I can get the result without doing any disk i/o.
+<pre class="brush:csharp">public byte[] GetPdf(ViewModel model)
+{
+  MemoryStream ms = new MemoryStream();
+  Document doc = new Document(PageSize.A4);
+  PdfWriter writer = PdfWriter.GetInstance(doc, ms);
+  doc.Open();
+  var mainTable = new PdfPTable(1);
+  mainTable.TotalWidth = size.Width;
+  mainTable.WidthPercentage = 100f;
+
+  var header = new PdfPCell();
+  header.Border = Rectangle.NO_BORDER;
+
+  var body = new PdfPCell();
+  body.Border = Rectangle.NO_BORDER;
+  body.MinimumHeight = 600f;
+
+  var footer = new PdfPCell();
+  footer.Border = Rectangle.NO_BORDER;
+
+  mainTable.AddCell(header);
+  mainTable.AddCell(body);
+  mainTable.AddCell(footer);            
+
+  doc.Add(mainTable);
+  doc.Close();
+
+  return ms.ToArray();
+}</pre>
+So once I have my little pdf I want to return it from my Details action in my controller. The way I solved it was to return a File with the byte array containing the pdf and with the content type set to application/pdf.
+<pre class="brush:csharp">[AcceptVerbs("get")]
+public ActionResult Details(int id)
+{
+  ViewModel vm = GetViewModel(id);
+
+  PdfLib lib = new PdfLib();
+  Byte[] output = lib.GetPdf(vm);
+
+  return File(output, "application/pdf");
+}</pre>
+<div class="zemanta-pixie" style="margin-top: 10px; height: 15px;"><img class="zemanta-pixie-img" style="border: none; float: right;" src="http://img.zemanta.com/pixy.gif?x-id=9e823274-bdff-46aa-83b1-ce5a13604936" alt="" /></div>

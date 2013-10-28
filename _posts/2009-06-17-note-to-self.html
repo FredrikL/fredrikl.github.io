@@ -1,0 +1,18 @@
+---
+layout: post
+title: note to self
+categories:
+- Code
+tags:
+- Episkfail
+- NHibernate
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '1'
+---
+A short one. Just so I don't forget, then again Subversion never forgets! Don't use SchemaExport on existing dbs, it breaks them!
+<pre class="brush: csharp;">if(!File.Exists("episkfail.db"))
+    new SchemaExport(cfg).Execute(false, true, false, false);</pre>
+and yes, it's a part of my twitter client that I code a bit on when I got nothing better to do =)

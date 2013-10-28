@@ -1,0 +1,91 @@
+---
+layout: post
+title: Reading Firefox cookies for fun and profit
+categories:
+- Code
+tags:
+- C#
+- Cookies
+- Firefox
+- Web
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '2'
+---
+So I do a bit of small applications when I have the time, among others a html scraper. It has worked fine for a couple of months until the site I was scraping decided to require the 'user' to be logged in to access the data I wanted. At first it didn't seem like a hard thing to do, just post username and password on the login page and store the session cookie, but they had added some guards against this: double hashed password in javascript (with multiple salts) so that option quickly became more work than I wanted.
+
+Since I'm a programmer I'm rather lazy so I started to google Internet Explorer cookies (ah, yes the site offers logging in with the option to stay logged in forever) but accessing them seemed messy and i couldn't find the cookie I wanted on my box.
+
+Next try was a real browser, <a href="http://mozillalinks.org/wp/2007/03/dont-hurt-the-web-remixed/">FireFox</a>, a second quick trip to google gave me this nice <a href="http://stackoverflow.com/questions/826741/programmatically-set-browser-cookie-firefox">page</a> (see <a href="http://stackoverflow.com/">stack overflow</a> ftw). If your like me (lazy), FireFox stores cookies in a sqlite database, nice and easy to read. That simply solved my problems, what I needed to do was to open the database, read the cookies I wanted and use a <a href="http://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.aspx">HttpWebRequest</a> with a <a href="http://msdn.microsoft.com/en-us/library/system.net.cookiecontainer.aspx">CookiesContainer</a> to download the page I wanted.
+
+<strong>So on to the fun part (Code!1!)</strong>
+First a small method to get the path of the cookie db
+<pre class="brush: csharp;">        private static string GetFireFoxCookiePath()
+        {
+            var x = Environment.GetFolderPath(
+                             Environment.SpecialFolder.ApplicationData);
+            x += @"\Mozilla\Firefox\Profiles\";
+            var di = new DirectoryInfo(x);
+            var dir = di.GetDirectories("*.default");
+            if (dir.Length != 1)
+                return string.Empty;
+
+            x += dir[0].Name + @"\" + "cookies.sqlite";
+
+            if (!File.Exists(x))
+                return string.Empty;
+
+            return x;
+        }</pre>
+Nothing hard here, just get the path to the ApplicationData folder, find the profile directory that has a name ending in .default, add that and \cookies.sqlite to the string and we have the path to the cookie file.
+
+Then some code to read the data we want
+<pre class="brush: csharp;">        private static Dictionary&lt;string, CookieContainer&gt; CookieYar = new Dictionary&lt;string, CookieContainer&gt;();
+
+        private static CookieContainer GetCookieConatinerForHost(string url)
+        {
+            var uri = new Uri(url);
+            var host = uri.Host.Replace("www.", "");
+
+            if (CookieYar.ContainsKey(host))
+                return CookieYar[host];
+
+            var cc = new CookieContainer();
+            using (var conn = new SQLiteConnection("Data Source=" + GetFireFoxCookiePath()))
+            {
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "select * from moz_cookies where host like '%" + host + "%';";
+                    conn.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            cc.Add(new Cookie(reader["name"].ToString(), reader["value"].ToString(),
+                                              reader["path"].ToString(), reader["host"].ToString()));
+                        }
+                    }
+                }
+            }
+            CookieYar.Add(host, cc);
+
+            return cc;
+        }</pre>
+The replace in the start is to handle those cases where the cookie is set to be .domain since it seems to work that way (might be RFC somewhere covering this, but it seems to work). A yes the dictionary is just to avoid database access all the time. The rest of the code is quite simple, check if we have a CookieContainer for the host already in that case return it, otherwise open the database and read the cookies associated with that host.
+
+And something that uses it :)
+<pre class="brush: csharp;">        internal static string DownLoadData(string urlToDownload)
+        {
+            var req = (HttpWebRequest) WebRequest.Create(urlToDownload);
+            req.CookieContainer = GetCookieConatinerForHost(urlToDownload);
+            var response = (HttpWebResponse) req.GetResponse();
+            var strm = new StreamReader(response.GetResponseStream());
+            return strm.ReadToEnd();
+        }</pre>
+The only thing I've done here is to set the CookieContainer on the HttpWebRequest to a Container that has all the Cookies FireFox has stored for the host I'm downloading data from.
+
+Yes, the code has no error handling at all, in my app it does, since I wanted something to share I removed those bits, and it needs some refactoring too =)
+
+Code (with example): <a href="http://blog.tacticalnuclearstrike.com/wp-content/2009/06/cookiereader.rar">cookiereader</a>

@@ -1,0 +1,50 @@
+---
+layout: post
+title: Tweeting uptime and load
+categories:
+- Code
+- Hacks
+tags:
+- Ruby
+- Twitter
+- Unix
+status: publish
+type: post
+published: true
+meta:
+  _flattr_btn_disabled: ''
+  _flattr_post_hidden: '0'
+  _flattr_post_category: text
+  _flattr_post_language: en_GB
+  _edit_last: '2'
+---
+On my file server I have at home I run the backend software for my <a href="http://www.logitech.com/en-us/speakers-audio/wireless-music-systems">Squeezebox Touch</a>, overall it works well but sometimes it starts using 100% and not responding to any input which is a bit annoying. So I decided to add some kind on monitoring to the machine to know when this happens, first i looked at <a href="http://www.nagios.org">Nagios </a>but decided that it contained more than I needed so I wrote a very small ruby script that tweets the result of the uptime command. The script is added to the crontab and is run every hour.
+
+So to set it up you need a twitter account and then you need to get a <a href="http://oauth.net/">oauth</a> token and token secret that the script needs to be able to post and update. To get the oauth token and secret use the following script: <a href="https://gist.github.com/1377690">https://gist.github.com/1377690</a>
+
+The script itself is just the setup for the twitter gem and then a update, the only thing here is that %[uptime] will execute the update command and return the output from it, something like 12:00:01 up 31 days, 18:48, 2 users, load average: 0.00, 0.00, 0.00.
+<pre class="brush:ruby">#!/usr/bin/env ruby
+
+require "rubygems"
+require "twitter"
+
+CONSUMER_KEY = 'CONSUMER_KEY'
+CONSUMER_SECRET = 'CONSUMER_SECRET '
+OAUTH_TOKEN = 'OAUTH_TOKEN '
+OAUTH_TOKEN_SECRET = 'OAUTH_TOKEN_SECRET '
+
+Twitter.configure do |config|
+  config.consumer_key = CONSUMER_KEY
+  config.consumer_secret = CONSUMER_SECRET
+  config.oauth_token = OAUTH_TOKEN
+  config.oauth_token_secret = OAUTH_TOKEN_SECRET
+end
+
+client = Twitter::Client.new
+client.update(%x[uptime])</pre>
+I had some problems with the gem paths when I ran the script though crond so I wrapped the ruby file with this small script that exports the GEM_HOME environment variable
+<pre class="brush:shell">export GEM_HOME=$HOME/.gems
+$PATH_TO_SCRIPT/tweet_load.rb</pre>
+Then the only thing left is to add the shell script to the crontab (crontab -e) to have it run every hour the line should be something like this.
+<pre class="brush:shell">0 * * * * $PATH_TO_SCRIPT/tweet_load.sh</pre>
+Full source can be found here: <a href="https://github.com/FredrikL/TweetLoad">https://github.com/FredrikL/TweetLoad</a>

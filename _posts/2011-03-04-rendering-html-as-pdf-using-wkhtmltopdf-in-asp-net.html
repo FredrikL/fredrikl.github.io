@@ -1,0 +1,41 @@
+---
+layout: post
+title: Rendering html as pdf using wkhtmltopdf in Asp.net
+categories:
+- Code
+tags:
+- asp.net
+- C#
+- PDF
+status: publish
+type: post
+published: true
+meta:
+  _flattr_post_category: text
+  _edit_last: '2'
+  _flattr_btn_disabled: ''
+  _flattr_post_hidden: '0'
+  _flattr_post_language: en_GB
+---
+To continue the <a title="Building PDFs in Asp.Net MVC 2" href="http://blog.tacticalnuclearstrike.com/2010/09/building-pdfs-in-asp-net-mvc-2/">theme</a> of pdf creation in websites. Today I bring you a way of using <a href="http://code.google.com/p/wkhtmltopdf/">wkhtmltopdf</a> to render html pages as pdfs, since it uses <a href="http://en.wikipedia.org/wiki/Webkit">webkit</a> to render html the result looks the same as the page does in Chrome or Safari.
+
+To avoid creating a bunch of pdfs on disk and then reading them back before sending them to the client I choose to use the option of sending the pdf to the standard outputstream for the wkhtmltopdf process, that way I simply read the result for that stream and write it on the asp.net Response. To get wkhtmltopdf to send the result on stdout I set the second parameter to a - instead of a output filename. The first is set to the url of the html page I want turned into a pdf. 
+
+One thing that might cause problems for you here is that since the request to get the html is send for an external process it won't share the session data so if your page relies on some information that is present in the clients session (authentication etc) you need to pass that information in the request. Another possible solution is presented after the code example.
+<pre class="brush:csharp">string args = string.Format("\"{0}\" - ",Request.Url.AbsoluteUri);
+var startInfo = new ProcessStartInfo(Server.MapPath("tools\\wkhtmltopdf.exe"), args)
+{
+  UseShellExecute = false,
+  RedirectStandardOutput = true
+};
+var proc = new Process {StartInfo = startInfo};
+proc.Start();
+
+string output = proc.StandardOutput.ReadToEnd();
+byte[] buffer = proc.StandardOutput.CurrentEncoding.GetBytes(output);
+proc.WaitForExit();
+proc.Close();
+Response.ContentType = "application/pdf";
+Response.BinaryWrite(buffer);
+Response.End();</pre>
+Possible improvements, since wkthmltopdf also supports sending the html to convert to the process on standard input (by setting the first argument to -) it's possible to start the process and send the rendered page to process and then the result to the client.

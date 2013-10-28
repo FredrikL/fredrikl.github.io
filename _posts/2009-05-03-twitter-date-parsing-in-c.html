@@ -1,0 +1,28 @@
+---
+layout: post
+title: Twitter date parsing in C#
+categories:
+- Code
+tags:
+- C#
+- Twitter
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '2'
+---
+A small but 'real' post. <a href="http://twitter.com">Twitter</a> stores all dates in a well, nonstandard way, so i came up with the following extension for my project to handle this:
+<pre class="brush: c-sharp;">    public static class Extensions
+    {
+        public static DateTime ParseTwitterTime(this string date)
+        {
+            const string format = "ddd, dd MMM yyyy HH:mm:ss zzzz";
+            return  DateTime.ParseExact(date, format, CultureInfo.InvariantCulture);
+        }
+    }</pre>
+What i does is takes the string from the XML response formatted like this "Wed, 08 Apr 2009 19:22:10 +0000" and parses it as an DateTime. Having it as an extension allows me to use in inside LINQ queries.
+
+(And I needed something to test the <a href="http://alexgorbatchev.com/wiki/SyntaxHighlighter">SyntaxHighlighter</a> script)
+
+Updated 2010-09-06: Twitter changed it's format in the api

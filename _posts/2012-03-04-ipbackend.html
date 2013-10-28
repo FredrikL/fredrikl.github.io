@@ -1,0 +1,19 @@
+---
+layout: post
+title: IpBackend
+categories:
+- Code
+tags:
+- C#
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '2'
+  _flattr_post_language: en_GB
+  _flattr_post_category: text
+  _flattr_post_hidden: '0'
+---
+Small project that can be hosted on a free <a href="https://appharbor.com/">Appharbor</a> instance that makes it possible for computers to report their IP address. Why ? Because my dyndns account expired and it was more fun to build a custom thing than register a new domain. The back end is based on my new favorite .net project: <a href="http://nancyfx.org">Nancy</a>. To get started simply create database tables based on the db.sql script and put a user name and password into the web.config. There's a ruby script included on <a href="https://github.com/FredrikL/IpBackend">github</a> with a example client the one I run from a cronjob to keep track of the IP of my home computer.
+
+For a even simpler client you could just use <a href="http://curl.haxx.se/">Curl</a>.

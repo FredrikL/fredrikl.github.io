@@ -1,0 +1,39 @@
+---
+layout: post
+title: Using MultipartEntity in Android applications
+categories:
+- Code
+tags:
+- Android
+- Apache
+- HTTP Post
+- tumblr
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '2'
+  _flattr_post_language: en_GB
+  _flattr_post_category: text
+  _flattr_post_hidden: '0'
+  _flattr_btn_disabled: ''
+---
+To be able to upload files from an Android application and use the Multipart content type you need to add some additional jar files to your application.
+
+The files needed are <a href="http://james.apache.org/mime4j/">apache-mime4j</a>, <a href="http://hc.apache.org/downloads.cgi">httpclient, httpcore and httpmime</a>. All are opensource projects built by the <a href="http://www.apache.org">Apache</a> foundation.
+
+Download the 4 files and add them to your project then you should be able to use the following code to post strings and files to pages.
+<pre class="brush: java">HttpClient httpclient = new DefaultHttpClient();
+HttpPost httppost = new HttpPost("http://www.tumblr.com/api/write");
+
+try {
+	MultipartEntity entity = new MultipartEntity();
+
+	entity.addPart("type", new StringBody("photo"));
+	entity.addPart("data", new FileBody(image));
+	httppost.setEntity(entity);
+	HttpResponse response = httpclient.execute(httppost);
+} catch (ClientProtocolException e) {
+} catch (IOException e) {
+}</pre>
+The image variable in this case is a File that contains an image captured by the camera on the phone.

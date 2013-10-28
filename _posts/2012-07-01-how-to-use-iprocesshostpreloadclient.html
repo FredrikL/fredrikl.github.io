@@ -1,0 +1,46 @@
+---
+layout: post
+title: How to use IProcessHostPreloadClient
+categories:
+- Code
+tags:
+- iis
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '2'
+  _flattr_post_hidden: '0'
+  _flattr_post_customurl: ''
+---
+With .Net Framework 4.0 an interface called <a href="http://msdn.microsoft.com/en-us/library/system.web.hosting.iprocesshostpreloadclient.aspx">IProcessHostPreloadClient</a> was added, it has one method called Preload. With a correctly configured application pool and Website this method will be called as soon as IIS has started, this allows you to run code in your website before the first visitor has arrived causing application_start to kick in. This can be used to prewarm your website cache, to magic stuff during site start up (register with a loadbalancer maybe?) or well anything else that can't wait until someone visits the website.
+
+Assuming you have a application pool and website in your IIS you first need to add a class implementing the IProcessHostPreloadClient interface that does some magic. Once that is done you need to edit the applicationHost.config (full path <em>C:\Windows\System32\inetsrv\config\applicationHost.config</em>)
+
+First find the applicationPool under the applicationPools node and add the following attributes to it:
+<ul>
+	<li>autoStart=”true”</li>
+	<li>startMode="AlwaysRunning"</li>
+</ul>
+Then under the system.applicationHost node add a registration for your PreloadClient
+<pre class="brush:xml">&lt;serviceAutoStartProviders&gt;
+
+  &lt;add name="RegisterApplicationHandler" type=X.RegisterApplicationHandler, X" /&gt;
+
+&lt;/serviceAutoStartProviders&gt;</pre>
+The name can be anything you want, the type needs to be the full name of the class implementing the IProcessHostPreloadClient (that namespace and class name)  comma the name of the assembly the class is in. Could be something like: <em>WebApplication1.PreloadClient, WebApplication1</em>
+
+When the provider is added you need add it to the website, this is done by adding the these attributes:
+<ul>
+	<li>application tag: serviceAutoStartEnabled="true"</li>
+	<li>serviceAutoStartProvider="RegisterApplicationHandler"</li>
+</ul>
+The value of serviceAutoStartProvider should be the same as the name of the provider you added. When everything is added save the file, this will cause IIS to reset since the applicationHost.config was altered. If everything is setup correctly your IIS should automatically spawn a w3wp.exe process as soon as it's started.
+
+<strong>Some things to think about</strong>
+<ul>
+	<li>It's hard to debug this code since it's run before your debugger has a chance to attach to it.</li>
+	<li>If the configuration is incorrect your website and/or IIS won't start, check the event log for info</li>
+	<li>If Preload throws an exception then your site won't start, use <a href="http://www.dodgycoder.net/2011/11/yoda-conditions-pokemon-exception.html">pokemon exception handling</a> if you must ;)</li>
+	<li>If you setup an <a href="http://en.wikipedia.org/wiki/Inversion_of_control">IoC</a> container in Application_start then that won't be available in Preload, so you either need to load it there too or find ways to do your work without it.</li>
+</ul>

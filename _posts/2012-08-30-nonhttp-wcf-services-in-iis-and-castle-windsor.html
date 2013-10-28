@@ -1,0 +1,36 @@
+---
+layout: post
+title: Nonhttp WCF services in IIS and Castle Windsor
+categories:
+- Code
+tags:
+- C#
+- Castle Windsor
+- ioc
+- WCF
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '2'
+  _flattr_post_hidden: '0'
+  _flattr_post_customurl: ''
+---
+If you have a wcf service hosted in IIS that is using a binding that isn't based on http wiring (like <a href="http://msdn.microsoft.com/en-us/library/system.servicemodel.nettcpbinding.aspx">net.tcp</a>) it with your <a href="http://en.wikipedia.org/wiki/Inversion_of_control">IoC</a> container requires some additional steps. For this example i'm using <a href="http://docs.castleproject.org/Windsor.MainPage.ashx">Castle Windsor</a>, first install the <a href="http://nuget.org/packages/Castle.WcfIntegrationFacility">Castle Windsor WCF integration facility</a> from nuget, that will pull Castle Windsor & their extensions for wcf.
+
+If the binding used for the wcf service isn't based on http then the Applicaton_Start method in global.asax.cs won't be called before the service is invoked. This will cause a problem if our serivce has dependecies that need to be injected. To setup the container used to resolve dependencies we create a class in the App_Code folder under the website that has a method with the following signature: <strong>public static void AppInitialize()</strong> this method will be called before our service is invoked the first time so it is a perfect place to setup our IoC container.
+
+A simple registration would look like this
+<pre class="brush:csharp">public class AppInit
+{
+  private static IWindsorContainer _container;
+  public static void AppInitialize()
+  {
+    _container = new WindsorContainer();
+    _container.AddFacility<WcfFacility>();
+    _container.Register(Component.For<IService>().ImplementedBy<Service>());
+  }
+}
+</pre>
+
+The last thing to do is in the Serivce.svc markup add the castle factory attribute: <strong>Factory="Castle.Facilities.WcfIntegration.DefaultServiceHostFactory, Castle.Facilities.WcfIntegration"</strong>.
