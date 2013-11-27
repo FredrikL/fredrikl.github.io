@@ -17,9 +17,10 @@ In one of the projects I'm working on we needed a way to upload an file to a ser
 So this is what i came up with (I haven't upgraded to Silverlight 3, so it's only tested on Silverlight 2). I've declared an Action&lt;bool&gt; passed into the method that will hold the callback method, simple signature with a bool parameter to indicate success. What I've found was that UploadString offers the ablity to both post data and read the response, that allows us to post data, process it in page_load and then output a response (simple "OK" || "FAIL"). The downside of this approach is that we post a string so depending on what you upload you might need to base64 encode the content to avoid random problems with binary data.
 
 A bit of code to complete the post, it's downsized from it's original form and not supposed to work with cut &amp; paste coding. :)
-<pre class="brush: csharp">private Action&amp;lt;bool&gt; CompleteAction;
+{% highlight c# %}
+private Action<bool> CompleteAction;
 
-public void UploadFileWithCallBack(string PostUrl, Stream data, Action&amp;lt;bool&gt; completeAction)
+public void UploadFileWithCallBack(string PostUrl, Stream data, Action<bool> completeAction)
 {
    try
    {
@@ -49,4 +50,5 @@ void UploadFileWithCallBackCompleted(object sender, UploadStringCompletedEventAr
    {
       CompleteAction(false);
    }
-}</pre>
+}
+{% endhighlight %}

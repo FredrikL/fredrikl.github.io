@@ -1,9 +1,15 @@
 ---
 layout: default
 ---
-<h2>{{ page.title }}</h2>
-<p class="meta">{{ page.date | date_to_string }}</p>
+<article class="post type-post status-publish format-standard hentry category-code tag-canvas tag-javascript">
+	<header class="entry-header">
+							<div class="entry-title"><h2><a href="http://blog.tacticalnuclearstrike.com/2013/11/getting-dom-element-as-an-image/">{{ page.title }}</a></h2></div>
+						<div class="entry-meta above-content">
+				<p class="date"><span class="posted-on">Posted on <time class="entry-date published" datetime="2013-11-20T21:19:29+00:00">{{ page.date | date_to_string }}</time></span></p>
+			</div><!-- .entry-meta -->
+					</header>
+					<div class="entry-content">
+					{{ content }}
+					</div>
+</article>
 
-<div class="post">
-{{ content }}
-</div>

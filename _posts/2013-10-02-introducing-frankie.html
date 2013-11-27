@@ -12,26 +12,32 @@ meta:
   _edit_last: '2'
 ---
 For the last couple of days i've been working on a c++ version of the <a href="http://www.sinatrarb.com">Sinatra</a> web application framework, last night at <a href="http://demodag.org/">Demo Dag Malmö</a> i did a small demo of it so i might as well do a little write up too. So a "hello world" will look like this:
-<pre>module(Hello, {
+{% highlight c++ %}
+module(Hello, {
   Get("/", [](Context){
     return "Hello world!";
   });
-});</pre>
+});
+{% endhighlight %}
 In this example we'll listen for requests on / and return the string "Hello world!". The syntax is inspired by <a href="http://nancyfx.org/">Nancy</a>.
 
 Currently it supports Get request and can decode parameters if present. There's also a rough support for returning (html) files and for unknown routes a 404 will be returned.
 
 To return the file index.html when a client requests /.
-<pre>module(Static, {
+{% highlight c++ %}
+module(Static, {
   Get("/", [](Context) {
     return StaticResponse("index.html");
   });
-});</pre>
+});
+{% endhighlight %}
 Most of the syntax is still in it's infancy, so it may very well change based on input and the never-ending quest to type less. For now it's self hosted using <a href="http://banditcpp.org/">Boost.Asio</a> but at some point it would be nice to be able to host it under nginx/apache via some kind of module. So to start any of the examples you simple call the run method with a port number that it should listen on.
-<pre>int main() {
+{% highlight c++ %}
+int main() {
   frankie::run(9090);
   return 0;
-}</pre>
+}
+{% endhighlight %}
 Testing is done using the framework <a href="http://banditcpp.org/">bandit</a>, which is also a bit of inspiration for the project.
 
 Frankie is <a href="https://github.com/FredrikL/frankie">up on github</a>, for now I'm using issues in the repository to track stuff that needs to be done. Feel free to point and laugh and help me make it better. To build it you'll need boost installed and clang, at this point it's only tested on OSX 10.8 with clang 5.0 (llvm 3.3).
