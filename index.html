@@ -3,19 +3,18 @@ layout: default
 title: Tactical Nuclear Stike
 ---
 
-
 <!-- This loops through the paginated posts -->
 {% for post in paginator.posts %}
 <article class="post type-post status-publish format-standard hentry category-code tag-canvas tag-javascript">
 	<header class="entry-header">
-							<div class="entry-title"><h2><a href="http://blog.tacticalnuclearstrike.com/2013/11/getting-dom-element-as-an-image/">{{ post.title }}</a></h2></div>
-						<div class="entry-meta above-content">
-				<p class="date"><span class="posted-on">Posted on <time class="entry-date published" datetime="2013-11-20T21:19:29+00:00">{{ post.date | date_to_string }}</time></span></p>
-			</div><!-- .entry-meta -->
-					</header>
-					<div class="entry-content">
-					{{ post.content }}
-					</div>
+		<div class="entry-title"><h2><a href="{{ post.url }}">{{ post.title }}</a></h2></div>
+		<div class="entry-meta above-content">
+			<p class="date"><span class="posted-on">Posted on <time class="entry-date published" datetime="{{ post.date }}">{{ post.date | date_to_string }}</time></span></p>
+		</div><!-- .entry-meta -->
+	</header>
+	<div class="entry-content">
+		{{ post.content }}
+	</div>
 </article>
 
 {% endfor %}
