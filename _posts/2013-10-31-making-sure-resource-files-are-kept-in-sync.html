@@ -12,7 +12,8 @@ published: true
 ---
 
 Lets assume you have a site that uses resource files to handle translations, in that case you might need a way to make sure that everything is kept in sync and translated. One way of solving this with tests, that way it can be checked during commits &amp; builds. Since resource files are loaded based on the CurrentUICulture the test needs a way to swap culture during it's run. So here's a small class that does just that (from Stackoverflow, lost the link tho).
-<pre>public class SwitchCultureContext : IDisposable
+{% highlight c# %}
+public class SwitchCultureContext : IDisposable
 {
     private CultureInfo previousCultureInfo { get; set; }
 
@@ -32,13 +33,15 @@ Lets assume you have a site that uses resource files to handle translations, in 
         Thread.CurrentThread.CurrentUICulture 
          = previousCultureInfo;
     }
-}</pre>
+}
+{% endhighlight %}
 Basically use it inside a using() {} statement to temporarily run with a different culture.
 
 So in my case I have a resource file called Strings that is the baseline I use during development, I also have one that is for translation (using the ta-IN culture) that has all texts as placeholders to allow for them to be easily identified. So my test will read all items in by baseline and then compare it to everything from the translation. If something is missing in the translation file then the value from the baseline file will be used instead. Because I have placeholders in my translation file I can simply look at the value from the file and compare it to the value form the baseline file in no case should the be the same.
 
 So the 'litte' test
-<pre>[Test]
+{% highlight c# %}
+[Test]
 public void AllPropertiesOnBaseShouldBeOnTranslation()
 {
     var baseLine = new Dictionary&lt;string, string&gt;();
@@ -83,5 +86,6 @@ public void AllPropertiesOnBaseShouldBeOnTranslation()
 
     Assert.That(pass, Is.True, 
         "Translation resource file is not in sync!");
-}</pre>
+}
+{% endhighlight %}
 So if the test fails it will have outputted which keys that haven't been translated. In this case my resource files only contain strings so I ignore all other properties.
