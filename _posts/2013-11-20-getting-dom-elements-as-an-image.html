@@ -1,0 +1,59 @@
+---
+layout: post
+title: Getting DOM element as an Image
+categories:
+- Code
+tags:
+- canvas
+- javascript
+status: publish
+type: post
+published: true
+---
+
+So I recently needed to create a image from a part of a webpage (html) after a short googling I found a nice library, <a href="http://html2canvas.hertzen.com/">html2canvas</a>, that can render a part of the dom as a canvas element, complete with all css properties. So that's a good start but I needed some way of making the image downloadable too. Turns out the canvas element has a function called toDataURL that returns the rendered content of the canvas as a data-url. The url can then be used with a &lt;a&gt; tag to create a download link. So the complete example looks something like this.
+<pre>html2canvas($("#toclone"), {
+    onrendered: function (canvas) {
+        var $a = $("&lt;a download=\"file.png\" href=\"" + canvas.toDataURL() + "\"&gt;download&lt;/a&gt;");
+        $("#somecontainer").append($a);
+    }
+});</pre>
+This works fine in Chrome &amp; Firefox whoever not in Internet Explorer, in IE a small hack is needed. Due to 'security' reasons IE doesn't allow data urls in &lt;a&gt; tags so instead you need to decode the data from the canvas and create a blob object that can be passed to the window.navigator.msSaveOrOpenBlob function.
+<pre>var isIe = function() {
+    var trident = !!navigator.userAgent.match(/Trident\/7.0/);
+    var net = !!navigator.userAgent.match(/.NET4.0E/);
+    var ie11 = trident &amp;&amp; net;
+    var iEold = (navigator.userAgent.match(/MSIE/i) ? true : false);
+    return ie11 || iEold;
+};
+
+var workInHorribleIE = function(canvas, filename) {
+    var image = canvas.toDataURL();
+    image = image.substring(22); // remove data stuff
+
+    var byteString = atob(image);
+    var buffer = new ArrayBuffer(byteString.length);
+    var intArray = new Uint8Array(buffer);
+    for (var i = 0; i &lt; byteString.length; i++) {
+        intArray[i] = byteString.charCodeAt(i);
+    }
+
+    var blob = new Blob([buffer], { type: "image/png" });
+
+    window.navigator.msSaveOrOpenBlob(blob, filename +".png");
+};
+
+html2canvas($("#cctree"), {
+    onrendered: function (canvas) {
+        var $a;
+        if (isIe()) {
+            $a = $("&lt;a&gt;download&lt;/a&gt;").on("click", function () {
+                workInHorribleIE(canvas, "file");
+            });
+        } else {
+            $a = $("&lt;a download=\"file.png\" href=\"" + canvas.toDataURL() + "\"&gt;download&lt;/a&gt;");
+        }
+        $("table", $cntnt).parent().append($a);
+    }
+});</pre>
+Guess there's better ways to detect if IE is present and most of the data-url to blob stuff should be replaced with a toBlob call once it's supported.

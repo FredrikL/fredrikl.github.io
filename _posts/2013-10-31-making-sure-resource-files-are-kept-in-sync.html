@@ -1,0 +1,87 @@
+---
+layout: post
+title: Making sure resource files are kept in sync
+categories:
+- Code
+tags:
+- c#
+- resx
+status: publish
+type: post
+published: true
+---
+
+Lets assume you have a site that uses resource files to handle translations, in that case you might need a way to make sure that everything is kept in sync and translated. One way of solving this with tests, that way it can be checked during commits &amp; builds. Since resource files are loaded based on the CurrentUICulture the test needs a way to swap culture during it's run. So here's a small class that does just that (from Stackoverflow, lost the link tho).
+<pre>public class SwitchCultureContext : IDisposable
+{
+    private CultureInfo previousCultureInfo { get; set; }
+
+    public SwitchCultureContext(CultureInfo temporaryCulture)
+    {
+        previousCultureInfo 
+          = Thread.CurrentThread.CurrentUICulture;
+        Thread.CurrentThread.CurrentUICulture
+          = temporaryCulture;
+    }
+
+    public SwitchCultureContext(string code) 
+        : this(new CultureInfo(code)) { }
+
+    public void Dispose()
+    {
+        Thread.CurrentThread.CurrentUICulture 
+         = previousCultureInfo;
+    }
+}</pre>
+Basically use it inside a using() {} statement to temporarily run with a different culture.
+
+So in my case I have a resource file called Strings that is the baseline I use during development, I also have one that is for translation (using the ta-IN culture) that has all texts as placeholders to allow for them to be easily identified. So my test will read all items in by baseline and then compare it to everything from the translation. If something is missing in the translation file then the value from the baseline file will be used instead. Because I have placeholders in my translation file I can simply look at the value from the file and compare it to the value form the baseline file in no case should the be the same.
+
+So the 'litte' test
+<pre>[Test]
+public void AllPropertiesOnBaseShouldBeOnTranslation()
+{
+    var baseLine = new Dictionary&lt;string, string&gt;();
+    var translated = new Dictionary&lt;string, string&gt;();
+
+    var props = typeof (Strings).
+        GetProperties(BindingFlags.Public | BindingFlags.Static).
+        Where(p =&gt; p.PropertyType == typeof(string)).ToArray();
+
+    foreach (var propertyInfo in props)
+    {
+        var info = typeof(Strings).GetProperty(propertyInfo.Name,
+             BindingFlags.Public | BindingFlags.Static);
+        var value = info.GetValue(null) as string;
+
+        baseLine.Add(propertyInfo.Name, value);
+    }
+
+    using (new SwitchCultureContext("ta-IN"))
+    {
+        var type = typeof (Strings);
+        foreach (var baseProperty in props)
+        {
+            var info = type.GetProperty(baseProperty.Name,
+                 BindingFlags.Public | BindingFlags.Static);
+            var value = info.GetValue(null) as string;
+
+            translated.Add(baseProperty.Name, value);
+        }
+    }
+
+    bool pass = true;
+    foreach (var item in baseLine)
+    {
+        var t = translated[item.Key];
+        if (item.Value == t)
+        {
+            pass = false;
+            Debug.WriteLine(item.Key + " not translated!");
+        }
+    }
+
+    Assert.That(pass, Is.True, 
+        "Translation resource file is not in sync!");
+}</pre>
+So if the test fails it will have outputted which keys that haven't been translated. In this case my resource files only contain strings so I ignore all other properties.
