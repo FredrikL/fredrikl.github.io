@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: post
 title: AutoMapper & AutoFac
 type: post
 status: publish
