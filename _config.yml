@@ -1,8 +1,9 @@
 name: Tactical Nuclear Strike
 markdown: redcarpet
-highlighter: pygments
+highlighter: rouge
 permalink: /:year/:month/:title
 paginate: 4
 paginate_path: "blog/page:num"
 excerpt_separator: N/A-------N/A
 url: http://tacticalnuclearstrike.com
+gems: [jekyll-paginate]
