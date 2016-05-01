@@ -1,5 +1,4 @@
 name: Tactical Nuclear Strike
-markdown: redcarpet
 highlighter: rouge
 permalink: /:year/:month/:title
 paginate: 4
